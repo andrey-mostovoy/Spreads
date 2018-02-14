@@ -1,0 +1,13 @@
+{
+    "name": "Spreads/Spreads",
+    "description": "Bitcoin rates",
+    "require": {
+        "guzzlehttp/guzzle": "6.3.0",
+        "sly/notification-pusher": "v2.3.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Spreads\\": "src/"
+        }
+    }
+}

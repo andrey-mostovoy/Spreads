@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Spreads.ipa</key>
+	<array>
+		<dict>
+			<key>architectures</key>
+			<array>
+				<string>armv7</string>
+				<string>arm64</string>
+			</array>
+			<key>certificate</key>
+			<dict>
+				<key>SHA1</key>
+				<string>84D68C3B057BDBB3EA2741F615A00CA5BCA69E04</string>
+				<key>dateExpires</key>
+				<string>17.01.2019</string>
+				<key>type</key>
+				<string>iOS Development</string>
+			</dict>
+			<key>embeddedBinaries</key>
+			<array>
+				<dict>
+					<key>architectures</key>
+					<array>
+						<string>armv7</string>
+						<string>arm64</string>
+					</array>
+					<key>certificate</key>
+					<dict>
+						<key>SHA1</key>
+						<string>84D68C3B057BDBB3EA2741F615A00CA5BCA69E04</string>
+						<key>dateExpires</key>
+						<string>17.01.2019</string>
+						<key>type</key>
+						<string>iOS Development</string>
+					</dict>
+					<key>name</key>
+					<string>Alamofire.framework</string>
+					<key>team</key>
+					<dict>
+						<key>id</key>
+						<string>H7577J3G37</string>
+						<key>name</key>
+						<string>Андрей Мостовой</string>
+					</dict>
+				</dict>
+			</array>
+			<key>entitlements</key>
+			<dict>
+				<key>application-identifier</key>
+				<string>H7577J3G37.com.bit.Spreads</string>
+				<key>com.apple.developer.team-identifier</key>
+				<string>H7577J3G37</string>
+				<key>get-task-allow</key>
+				<true/>
+				<key>keychain-access-groups</key>
+				<array>
+					<string>H7577J3G37.com.bit.Spreads</string>
+				</array>
+			</dict>
+			<key>name</key>
+			<string>Spreads.app</string>
+			<key>profile</key>
+			<dict>
+				<key>UUID</key>
+				<string>711e1bcd-fca7-4079-aa06-23cac838ae1f</string>
+				<key>name</key>
+				<string>iOS Team Provisioning Profile: com.bit.Spreads</string>
+			</dict>
+			<key>team</key>
+			<dict>
+				<key>id</key>
+				<string>H7577J3G37</string>
+				<key>name</key>
+				<string>Андрей Мостовой</string>
+			</dict>
+		</dict>
+	</array>
+</dict>
+</plist>

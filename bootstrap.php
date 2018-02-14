@@ -11,8 +11,8 @@ define('LOG_DIR', __DIR__ . '/log/');
 
 define('PUSH_ENABLED', true);
 
-// таймаут в секундах (3 раза в сутки)
-define('PUSH_TIMEOUT', 28800);
+// таймаут в секундах (9 раз в сутки)
+define('PUSH_TIMEOUT', 9600);
 
 define('PUSH_ENV', 'PROD');
 define('APNS_CERTIFICATE', [

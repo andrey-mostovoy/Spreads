@@ -33,8 +33,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
 
     var TableView: StockTableViewController?
 
-    var RetreaveDataTimer: Timer!
-    var UserRateEditTimer: Timer!
+    weak var RetreaveDataTimer: Timer!
 
     var isUserChangeData = false
 
@@ -49,19 +48,18 @@ class ViewController: UIViewController, UITextFieldDelegate {
 
 //        progressStep = 1.0 / (timeInterval / progressDelay)
 
-        keyboardHandlers()
+        self.keyboardHandlers()
 
         self.TableView = (childViewControllers[0] as? StockTableViewController)
         self.isUserChangeData = false
 
-        retreaveAndViewData()
-        startTimer()
+        self.retreaveAndViewData()
     }
 
     // all for make keyboard disapear
     func keyboardHandlers() {
-        eurRate.delegate = self
-        usdRate.delegate = self
+        self.eurRate.delegate = self
+        self.usdRate.delegate = self
         
         // for scroll and table views
         let tap = UITapGestureRecognizer(target: self.view, action: #selector(UIView.endEditing(_:)))
@@ -81,45 +79,36 @@ class ViewController: UIViewController, UITextFieldDelegate {
         return true
     }
 
+    // edit text input event
+    @IBAction func rateEditingChanged(_ sender: UITextField) {
+        self.stopRetreaveTimer()
+
+        self.isUserChangeData = true
+        self.clearUserEditButton.isHidden = false
+
+        if (self.eurRate.text?.suffix(1) == ",") {
+            self.eurRate.text = self.eurRate.text?.replacingOccurrences(of: ",", with: ".")
+        }
+        if (self.usdRate.text?.suffix(1) == ",") {
+            self.usdRate.text = self.usdRate.text?.replacingOccurrences(of: ",", with: ".")
+        }
+
+        if (self.eurRate.text?.suffix(1) != "." && self.usdRate.text?.suffix(1) != "." && self.eurRate.text != "" && self.usdRate.text != "") {
+
+            self.retreaveAndViewData()
+            self.startRetreaveTimer()
+        }
+    }
+
+    // clear button pressed
     @IBAction func buttonTouchUpInside(_ sender: UIButton) {
-        clearUserEditButton.isHidden = true
-        isUserChangeData = false
-        if (UserRateEditTimer != nil) {
-            UserRateEditTimer.invalidate()
-        }
+        self.stopRetreaveTimer()
+
+        self.clearUserEditButton.isHidden = true
+        self.isUserChangeData = false
+
         self.retreaveAndViewData()
-        self.startTimer()
-    }
-
-    @objc func updateProgress() {
-        if (!RetreaveDataTimer.isValid) {
-            return
-        }
-        progressValue = progressValue + progressStep
-        self.retrieveIntervalProgress.progress = Float(progressValue)
-        if progressValue != 1.0 {
-            self.perform(#selector(self.updateProgress), with: nil, afterDelay: progressDelay)
-        }
-    }
-    
-    func startTimer() {
-        RetreaveDataTimer = Timer.scheduledTimer(timeInterval: 5, target: self, selector: #selector(self.update), userInfo: nil, repeats: true)
-
-        startProgress()
-    }
-
-    func stopTimer() {
-        RetreaveDataTimer.invalidate()
-        stopProgress()
-    }
-    
-    func startProgress() {
-        progressValue = 0.0
-        self.perform(#selector(self.updateProgress), with: nil, afterDelay: progressDelay)
-    }
-
-    func stopProgress() {
-        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(self.updateProgress), object: nil)
+        self.startRetreaveTimer()
     }
 
     override func didReceiveMemoryWarning() {
@@ -127,45 +116,72 @@ class ViewController: UIViewController, UITextFieldDelegate {
         // Dispose of any resources that can be recreated.
     }
 
-    @IBAction func rateEditingChanged(_ sender: UITextField) {
-        self.isUserChangeData = true
-        clearUserEditButton.isHidden = false
+    // -------- retreave data timer
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
 
-        stopTimer()
+        self.startRetreaveTimer()
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
 
-        if (UserRateEditTimer != nil) {
-            UserRateEditTimer.invalidate()
+        self.stopRetreaveTimer()
+    }
+
+    func startRetreaveTimer() {
+        self.startProgress()
+        self.RetreaveDataTimer = Timer.scheduledTimer(timeInterval: 5, target: self, selector: #selector(update(_:)), userInfo: nil, repeats: true)
+    }
+
+    func stopRetreaveTimer() {
+        self.RetreaveDataTimer?.invalidate()
+        self.stopProgress()
+    }
+
+    @objc func update(_ timer: Timer) {
+        self.stopProgress()
+        self.retreaveAndViewData()
+        self.startProgress()
+    }
+    // ---------------------
+
+    // -------- progress bar
+    func startProgress() {
+        self.progressValue = 0.0
+        self.perform(#selector(self.updateProgress), with: nil, afterDelay: self.progressDelay)
+    }
+
+    func stopProgress() {
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(self.updateProgress), object: nil)
+    }
+
+    @objc func updateProgress() {
+        if (self.RetreaveDataTimer == nil) {
+            return
         }
 
-        if (eurRate.text?.suffix(1) != "." && usdRate.text?.suffix(1) != "." &&
-            eurRate.text != "" && usdRate.text != ""
-        ) {
-            // for minimal request to server use 2 sec interval for start retrieving data
-            UserRateEditTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false, block: { (Timer) in
-                self.retreaveAndViewData()
-                self.startTimer()
-            })
+        if (!self.RetreaveDataTimer.isValid) {
+            return
+        }
+        self.progressValue = self.progressValue + self.progressStep
+        self.retrieveIntervalProgress.progress = Float(self.progressValue)
+        if (self.progressValue != 1.0) {
+            self.perform(#selector(self.updateProgress), with: nil, afterDelay: self.progressDelay)
         }
     }
+    // ---------------------
 
-    @objc func update() {
-        stopProgress()
-        retreaveAndViewData()
-    }
-
-    @objc func updateWithUserData() {
-        stopProgress()
-        retreaveWithUserDataAndViewData()
-    }
-
+    // -------- retreave and show data
     func retreaveAndViewData() {
         if (self.isUserChangeData) {
             self.retreaveWithUserDataAndViewData()
         } else {
-            Alamofire.request("http://165.227.185.180/run_api.php").responseJSON { (response) -> Void in
-                if ((response.result.value) != nil) {
-                    self.parseAndViewData(data: response.data)
-                    self.startProgress()
+            DispatchQueue.global(qos: .userInitiated).async {
+                Alamofire.request("http://165.227.185.180/run_api.php").responseJSON { (response) -> Void in
+                    if ((response.result.value) != nil) {
+                        self.parseAndViewData(data: response.data)
+                    }
                 }
             }
         }
@@ -175,34 +191,41 @@ class ViewController: UIViewController, UITextFieldDelegate {
         let eur = Float(eurRate.text!)
         let usd = Float(usdRate.text!)
 
-        Alamofire.request(
-            "http://165.227.185.180/run_api.php",
-            method: .post,
-            parameters: ["method": "manualCashRate", "cashRate": ["EUR": eur!, "USD": usd!]]
-        ).responseJSON { (response) -> Void in
-            if ((response.result.value) != nil) {
-                self.parseAndViewData(data: response.data)
-                self.startProgress()
+        DispatchQueue.global(qos: .userInitiated).async {
+            Alamofire.request(
+                "http://165.227.185.180/run_api.php",
+                method: .post,
+                parameters: ["method": "manualCashRate", "cashRate": ["EUR": eur, "USD": usd]]
+                ).responseJSON { (response) -> Void in
+                    if ((response.result.value) != nil) {
+                        self.parseAndViewData(data: response.data)
+                    }
             }
         }
     }
-
+    
     private func parseAndViewData(data: Data?) {
-        let parsedData = try! JSONDecoder().decode(StockExchangeData.self, from: data!)
-
-        self.localPrice.text = String(format: "%.5f", parsedData.local);
-        if (!self.isUserChangeData) {
-            self.usdRate.text = String(format: "%.2f", parsedData.cash["USD"]!);
-            self.eurRate.text = String(format: "%.2f", parsedData.cash["EUR"]!);
+        do {
+            let parsedData = try JSONDecoder().decode(StockExchangeData.self, from: data!)
+            
+            DispatchQueue.main.async {
+                self.localPrice.text = String(format: "%.5f", parsedData.local);
+                if (!self.isUserChangeData) {
+                    self.usdRate.text = String(format: "%.2f", parsedData.cash["USD"]!);
+                    self.eurRate.text = String(format: "%.2f", parsedData.cash["EUR"]!);
+                }
+                
+                self.TableView?.stocks = []
+                
+                for (_, Info) in parsedData.stock {
+                    let StockObj = Stock(name: Info.name, buyEUR: Info.buy["EUR"]!, spreadEUR: Info.spread["EUR"]!, percentEUR: Info.percent["EUR"]!, buyUSD: Info.buy["USD"]!, spreadUSD: Info.spread["USD"]!, percentUSD: Info.percent["USD"]!)
+                    self.TableView?.stocks.append(StockObj!)
+                }
+                self.TableView?.tableView.reloadData()
+            }
+        } catch {
+            print("---- json parse error")
         }
-
-        self.TableView?.stocks = []
-        
-        for (_, Info) in parsedData.stock {
-            let StockObj = Stock(name: Info.name, buyEUR: Info.buy["EUR"]!, spreadEUR: Info.spread["EUR"]!, percentEUR: Info.percent["EUR"]!, buyUSD: Info.buy["USD"]!, spreadUSD: Info.spread["USD"]!, percentUSD: Info.percent["USD"]!)
-            self.TableView?.stocks.append(StockObj!)
-        }
-        self.TableView?.tableView.reloadData()
     }
+    // ---------------------
 }
-
